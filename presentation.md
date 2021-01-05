@@ -10,7 +10,7 @@
 Creating a tape measure webapp
 
 Thomas Hollevoet
-woensdag 6 januari 2021
+wednesday 6 january 2021
 
 ---
 # index.html
@@ -59,13 +59,13 @@ export { App };
 constructor(){
 	this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
 	this.camera.position.set( 0, 1.6, 3 );
-	
+  
 	this.scene = new THREE.Scene();
 
 	const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 2);
 	ambient.position.set( 0.5, 1, 0.25 );
 	this.scene.add(ambient);
-	
+  
 	const light = new THREE.DirectionalLight();
 	light.position.set( 0.2, 1, 1);
 	this.scene.add(light);
@@ -79,7 +79,7 @@ constructor(){
 
 	const container = document.createElement( 'div' );
 	document.body.appendChild( container );
-	
+  
 	this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true } );
 	this.renderer.setPixelRatio( window.devicePixelRatio );
 	this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -96,12 +96,12 @@ constructor(){
 	this.workingVec3 = new THREE.Vector3();
 	this.labels = [];
 	this.measurements = [];
-	
+  
 	this.initScene();
 	this.setupXR();
-	
+  
 	this.renderer.setAnimationLoop( this.render.bind(this) );
-	
+  
 	window.addEventListener('resize', this.resize.bind(this));
 }
 ```
@@ -143,7 +143,7 @@ initReticle() {
 ```js
 setupXR(){
 	this.renderer.xr.enabled = true;
-	
+  
 	const btn = new ARButton( this.renderer,
 		{ sessionInit: {
 			requiredFeatures: [ 'hit-test' ],
@@ -172,12 +172,12 @@ setupXR(){
 	const self = this;
 	this.hitTestSourceRequested = false;
 	this.hitTestSource = null;
-	
+  
 	function onSelect() {...}
 
 	this.controller = this.renderer.xr.getController( 0 );
 	this.controller.addEventListener( 'select', onSelect );
-	
+  
 	this.scene.add( this.controller );    
 }
 ```
@@ -218,12 +218,12 @@ initLine(point) {
 ```js
 render( timestamp, frame ) {
 	const self = this;
-	
+  
 	if ( frame ) {
 		if ( this.hitTestSourceRequested === false ) this.requestHitTestSource( )
 		if ( this.hitTestSource ) this.getHitTestResults( frame );
 	}
-	
+  
 	this.labels.forEach( label => {
 		const pos = self.toScreenPosition(label.point, self.renderer.xr.getCamera(self.camera));
 		label.div.style.transform = `translate(-50%, -50%) translate(${pos.x}px,${pos.y}px)`;
@@ -267,7 +267,7 @@ getHitTestResults( frame ){
 
 		this.reticle.visible = true;
 		this.reticle.matrix.fromArray( pose.transform.matrix );
-		
+  	
 		if (this.currentLine) this.updateLine(this.reticle.matrix, this.currentLine);
 	} else {
 		this.reticle.visible = false;
@@ -293,7 +293,7 @@ toScreenPosition(point, camera){
 	let width = window.innerWidth;
 	let height = window.innerHeight;
 	let vec = this.workingVec3;
-	
+  
 	vec.copy(point);
 	vec.project(camera);
 
@@ -344,4 +344,8 @@ getCenterPoint(points) {
 ---
 #
 ---
-# https://webxr.hollevoet.org
+# Live version
+## https://webxr.hollevoet.org
+
+# Presentation
+## https://webxr.hollevoet.org/presentation.html
