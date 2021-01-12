@@ -43,8 +43,7 @@ class App{
         
         this.renderer.setAnimationLoop( this.render.bind(this) );
 		
-		window.addEventListener('resize', this.resize.bind(this));
-        
+		window.addEventListener('resize', this.resize.bind(this));   
 	}
 	
     resize(){ 
@@ -74,6 +73,7 @@ class App{
         positions[3] = matrix.elements[12]
         positions[4] = matrix.elements[13]
         positions[5] = matrix.elements[14]
+        
         line.geometry.attributes.position.needsUpdate = true;
         line.geometry.computeBoundingSphere();
     }
@@ -81,12 +81,15 @@ class App{
     initReticle() {
         let ring = new THREE.RingBufferGeometry(0.045, 0.05, 32).rotateX(- Math.PI / 2);
         let dot = new THREE.CircleBufferGeometry(0.005, 32).rotateX(- Math.PI / 2);
+        
         const reticle = new THREE.Mesh(
             BufferGeometryUtils.mergeBufferGeometries([ring, dot]),
             new THREE.MeshBasicMaterial()
         );
+        
         reticle.matrixAutoUpdate = false;
         reticle.visible = false;
+        
         return reticle;
     }
 
@@ -107,12 +110,10 @@ class App{
         vec.z = 0;
 
         return vec
-
     }
     
     initScene(){
         this.reticle = this.initReticle();
-  
         this.scene.add( this.reticle );
     }
     
@@ -121,67 +122,56 @@ class App{
         
         const btn = new ARButton( this.renderer, { sessionInit: { requiredFeatures: [ 'hit-test' ], optionalFeatures: [ 'dom-overlay' ], domOverlay: { root: document.body } } } );
         
-        const self = this;
-
         this.hitTestSourceRequested = false;
         this.hitTestSource = null;
-        
-        function onSelect() {
-            if (self.reticle.visible){
-                const pt = new THREE.Vector3();
-                pt.setFromMatrixPosition(self.reticle.matrix);
-                self.measurements.push(pt);
-                if (self.measurements.length == 2) {
-                  const distance = Math.round(self.getDistance(self.measurements) * 100);
-
-                  const text = document.createElement('div');
-                  text.className = 'label';
-                  text.style.color = 'rgb(255,255,255)';
-                  text.textContent = distance + ' cm';
-                  document.querySelector('#container').appendChild(text);
-
-                  self.labels.push({div: text, point: self.getCenterPoint(self.measurements)});
-
-                  self.measurements = [];
-                  self.currentLine = null;
-                } else {
-                  self.currentLine = self.initLine(self.measurements[0]);
-                  self.scene.add(self.currentLine);
-                }
-            }
-        }
 
         this.controller = this.renderer.xr.getController( 0 );
-        this.controller.addEventListener( 'select', onSelect );
+        this.controller.addEventListener( 'select', this.onSelect );
         
         this.scene.add( this.controller );    
     }
+
+    onSelect(){
+        if (this.reticle.visible){
+            const pt = new THREE.Vector3();
+            pt.setFromMatrixPosition(this.reticle.matrix);
+            this.measurements.push(pt);
+            if (this.measurements.length == 2) {
+                const distance = Math.round(this.getDistance(this.measurements) * 100);
+
+                const text = document.createElement('div');
+                text.className = 'label';
+                text.style.color = 'rgb(255,255,255)';
+                text.textContent = distance + ' cm';
+                document.querySelector('#container').appendChild(text);
+
+                this.labels.push({div: text, point: this.getCenterPoint(this.measurements)});
+
+                this.measurements = [];
+                this.currentLine = null;
+            } else {
+                this.currentLine = this.initLine(this.measurements[0]);
+                this.scene.add(this.currentLine);
+            }
+        } 
+    }
     
-    requestHitTestSource(){
-        const self = this;
-        
+    requestHitTestSource(){        
         const session = this.renderer.xr.getSession();
 
-        session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
-            
-            session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
+        session.requestReferenceSpace( 'viewer' ).then(referenceSpace => {
+            session.requestHitTestSource( { space: referenceSpace } ).then(source => {
+                this.hitTestSource = source;
+            });
+        });
 
-                self.hitTestSource = source;
-
-            } );
-
-        } );
-
-        session.addEventListener( 'end', function () {
-
-            self.hitTestSourceRequested = false;
-            self.hitTestSource = null;
-            self.referenceSpace = null;
-
-        } );
+        session.addEventListener( 'end', () => {
+            this.hitTestSourceRequested = false;
+            this.hitTestSource = null;
+            this.referenceSpace = null;
+        });
 
         this.hitTestSourceRequested = true;
-
     }
     
     getHitTestResults( frame ){
@@ -197,29 +187,19 @@ class App{
             this.reticle.matrix.fromArray( pose.transform.matrix );
             
             if (this.currentLine) this.updateLine(this.reticle.matrix, this.currentLine);
-                
         } else {
-
             this.reticle.visible = false;
-
         }
-
     }            
 
-    render( timestamp, frame ) {
-
-        const self = this;
-        
+    render(timestamp, frame) {       
         if ( frame ) {
-
             if ( this.hitTestSourceRequested === false ) this.requestHitTestSource( )
-
             if ( this.hitTestSource ) this.getHitTestResults( frame );
-
         }
         
-        this.labels.forEach( label => {
-            const pos = self.toScreenPosition(label.point, self.renderer.xr.getCamera(self.camera));
+        this.labels.forEach(label => {
+            const pos = this.toScreenPosition(label.point, this.renderer.xr.getCamera(this.camera));
             label.div.style.transform = `translate(-50%, -50%) translate(${pos.x}px,${pos.y}px)`;
         })
 
