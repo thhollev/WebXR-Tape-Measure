@@ -345,7 +345,7 @@ getCenterPoint(points) {
 #
 ---
 # Live version
-## https://webxr.hollevoet.org
+## https://webxr.hollevoet.org/tapemeasure
 
 # Presentation
-## https://webxr.hollevoet.org/presentation.html
+## https://webxr.hollevoet.org/tapemeasure/presentation.html
